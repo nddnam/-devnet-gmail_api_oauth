@@ -72,18 +72,23 @@ if __name__ == "__main__":
     #--create mail services--#
     creds = gmail_credentials() 
 
-    import csv
+    #--Read line by line in csv, each line includes one user's mail address, and send mail to them.--#
+    with open('user_mail_lists.csv', 'r') as csv_file:
+        reader = csv.DictReader(csv_file)
+        for user in reader:
+           email_recipient = user['user_email']
+           #SEND MAIL#            
+           mail_content = gmail_compose(mail_subject, email_recipient, mail_body)
+           gmail_send(creds, mail_content)
+           
 
-
-#    with open('user_mail_lists.csv', 'r') as csv_file:
-#        reader = csv.DictReader(csv_file)
-#        for user in reader:
-#            
-#            email_recipient = user['user_email']
-#            
-#            #SEND MAIL
-#            mail_content = gmail_compose(mail_subject, email_recipient, mail_body)
-#            gmail_send(mail_service, mail_content)
+##############
+## OPTIONAL ##
+##############
+#-- You can use below block for multiple threads send mail to optimize the process in case you have--#
+#-- the long list of users --#
+import time
+import concurrent.futures #for multi threads
 
     with open('user_mail_lists.csv', 'r') as csv_file:
             reader = csv.DictReader(csv_file)
@@ -98,7 +103,7 @@ if __name__ == "__main__":
             # Submit the email sending task to the executor
             future = executor.submit(gmail_send, creds, mail_content)
             futures.append(future)
-            time.sleep(2) #some limitation of Google API, could not send a lot of email in short time.
+            time.sleep(1) #some limitation of Google API, could not send a lot of email in short time.
 
         # Wait for all tasks to complete
         concurrent.futures.wait(futures)
